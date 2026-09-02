@@ -63,3 +63,5 @@ go test ./cmd
 ```shell
 podman build -t $TAG .
 ```
+
+Alternatively, a pre-built docker image lives at `quay.io/trustyai/nemo-guardrails-reverse-proxy:latest`
