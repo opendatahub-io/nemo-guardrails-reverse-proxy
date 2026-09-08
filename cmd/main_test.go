@@ -67,7 +67,7 @@ func TestShortSAName(t *testing.T) {
 		{"system:serviceaccount:namespace-a:", "namespace-a", ""},
 	}
 	for _, tc := range tests {
-		got := shortSAName(tc.username, tc.namespace)
+		got := shortSAName(tc.username, "system:serviceaccount:"+tc.namespace+":")
 		if got != tc.want {
 			t.Errorf("shortSAName(%q, %q) = %q, want %q", tc.username, tc.namespace, got, tc.want)
 		}
@@ -84,10 +84,10 @@ func TestFindConfig_NilMapping(t *testing.T) {
 
 func TestFindConfig_PlainUsername(t *testing.T) {
 	m := invertAndFlattenMapping(makeMapping("config-b", "user-d", "config-a", "user-a", "config-a", "user-b"))
-	if got := findConfigFromInverseMapping(m, "user-a", "ns"); got != "config-a" {
+	if got := findConfigFromInverseMapping(m, "user-a", "system:serviceaccount:ns:"); got != "config-a" {
 		t.Errorf("got %q, want config-a", got)
 	}
-	if got := findConfigFromInverseMapping(m, "user-d", "ns"); got != "config-b" {
+	if got := findConfigFromInverseMapping(m, "user-d", "system:serviceaccount:ns:"); got != "config-b" {
 		t.Errorf("got %q, want config-b", got)
 	}
 }
@@ -95,7 +95,7 @@ func TestFindConfig_PlainUsername(t *testing.T) {
 func TestFindConfig_FullyQualifiedSA(t *testing.T) {
 	m := invertAndFlattenMapping(makeMapping("config-b", "user-d"))
 	username := "system:serviceaccount:namespace-a:user-d"
-	if got := findConfigFromInverseMapping(m, username, "namespace-a"); got != "config-b" {
+	if got := findConfigFromInverseMapping(m, username, "system:serviceaccount:namespace-a:"); got != "config-b" {
 		t.Errorf("got %q, want config-b", got)
 	}
 }
@@ -103,7 +103,7 @@ func TestFindConfig_FullyQualifiedSA(t *testing.T) {
 func TestFindConfig_ShortSANameMatchesCorrectNamespace(t *testing.T) {
 	m := invertAndFlattenMapping(makeMapping("config-a", "sa-alpha"))
 	username := "system:serviceaccount:namespace-a:sa-alpha"
-	if got := findConfigFromInverseMapping(m, username, "namespace-a"); got != "config-a" {
+	if got := findConfigFromInverseMapping(m, username, "system:serviceaccount:namespace-a:"); got != "config-a" {
 		t.Errorf("got %q, want config-a", got)
 	}
 }
@@ -111,14 +111,14 @@ func TestFindConfig_ShortSANameMatchesCorrectNamespace(t *testing.T) {
 func TestFindConfig_ShortSANameWrongNamespace(t *testing.T) {
 	m := invertAndFlattenMapping(makeMapping("config-a", "sa-alpha"))
 	username := "system:serviceaccount:namespace-b:sa-alpha"
-	if got := findConfigFromInverseMapping(m, username, "namespace-a"); got != "" {
+	if got := findConfigFromInverseMapping(m, username, "system:serviceaccount:namespace-a:"); got != "" {
 		t.Errorf("expected no match across namespaces, got %q", got)
 	}
 }
 
 func TestFindConfig_NoMatch(t *testing.T) {
 	m := invertAndFlattenMapping(makeMapping("config-a", "user-a"))
-	if got := findConfigFromInverseMapping(m, "unknown-user", "ns"); got != "" {
+	if got := findConfigFromInverseMapping(m, "unknown-user", "system:serviceaccount:ns:"); got != "" {
 		t.Errorf("expected empty, got %q", got)
 	}
 }
